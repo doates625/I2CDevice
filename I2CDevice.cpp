@@ -38,6 +38,14 @@ I2CDevice::I2CDevice()
 }
 
 /**
+ * @brief Returns reference to internal I2C bus interface
+ */
+I2CDEVICE_I2C_CLASS& I2CDevice::get_i2c()
+{
+	return (*i2c);
+}
+
+/**
  * @brief Writes int8_t to device register
  * @param reg_addr Register address to write to
  * @param value Value to write

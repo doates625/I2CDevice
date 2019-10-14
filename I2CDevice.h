@@ -57,9 +57,10 @@ public:
 	}
 	endian_t;
 
-	// Constructors
+	// Constructors and Basics
 	I2CDevice(I2CDEVICE_I2C_CLASS* i2c, uint8_t i2c_addr, endian_t endian);
 	I2CDevice();
+	I2CDEVICE_I2C_CLASS& get_i2c();
 
 	// Write Methods
 	void write_int8(uint8_t reg_addr, int8_t value);
