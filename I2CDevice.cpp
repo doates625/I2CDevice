@@ -77,7 +77,7 @@ void I2CDevice::write_int32(uint8_t reg_addr, int32_t value)
  */
 void I2CDevice::write_int64(uint8_t reg_addr, int64_t value)
 {
-	union64.int64 = value;
+	union64.int64s[0] = value;
 	write_bytes(reg_addr, 8);
 }
 
@@ -121,7 +121,7 @@ void I2CDevice::write_uint32(uint8_t reg_addr, uint32_t value)
  */
 void I2CDevice::write_uint64(uint8_t reg_addr, uint64_t value)
 {
-	union64.uint64 = value;
+	union64.uint64s[0] = value;
 	write_bytes(reg_addr, 8);
 }
 
@@ -260,7 +260,7 @@ int32_t I2CDevice::read_int32()
 int64_t I2CDevice::read_int64()
 {
 	read_bytes(8);
-	return union64.int64;
+	return union64.int64s[0];
 }
 
 /**
@@ -296,7 +296,7 @@ uint32_t I2CDevice::read_uint32()
 uint64_t I2CDevice::read_uint64()
 {
 	read_bytes(8);
-	return union64.uint64;
+	return union64.uint64s[0];
 }
 
 /**
