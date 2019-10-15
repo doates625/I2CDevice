@@ -36,9 +36,12 @@
 #elif defined(PLATFORM_MBED)
 	#define I2CDEVICE_I2C_CLASS I2C
 	#if !defined(I2CDEVICE_BUFFER_SIZE)
-		#error Must define I2CDEVICE_BUFFER_SIZE
+		#warning I2CDEVICE_BUFFER_SIZE must be defined. Defining as 8...
+		#define I2CDEVICE_BUFFER_SIZE 8
 	#elif I2CDEVICE_BUFFER_SIZE < 8
-		#error Must define I2CDEVICE_BUFFER_SIZE >= 8
+		#warning I2CDevice requires I2CDEVICE_BUFFER_SIZE >= 8. Setting to 8...
+		#undef I2CDEVICE_BUFFER_SIZE
+		#define I2CDEVICE_BUFFER_SIZE 8
 	#endif
 #endif
 
