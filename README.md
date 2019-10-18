@@ -1,5 +1,5 @@
 # I2CDevice
-Class for communicating with I2C generic devices
+Class for communicating with I2C generic devices  
 Written by Dan Oates (WPI Class of 2020)
 
 ### Description
