@@ -1,6 +1,6 @@
 /**
  * @file I2CDevice.h
- * @brief Class for communicating with I2C devices
+ * @brief Class for communicating with generic I2C devices
  * @author Dan Oates (WPI Class of 2020)
  * 
  * This class acts as an abstraction wrapper for communicating with I2C devices
