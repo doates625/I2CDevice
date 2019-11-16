@@ -5,24 +5,15 @@
  */
 #pragma once
 #include <Platform.h>
-#include <Unions.h>
+#include <Struct.h>
 
 /**
- * Platform-specific I2C Interface Class
+ * I2C Input Buffer Size Macro
  */
-#if defined(PLATFORM_ARDUINO)
-	#include <Wire.h>
-	#define I2CDEVICE_I2C_CLASS TwoWire
-#elif defined(PLATFORM_MBED)
-	#define I2CDEVICE_I2C_CLASS I2C
-	#if !defined(I2CDEVICE_BUFFER_SIZE)
-		#warning I2CDEVICE_BUFFER_SIZE must be defined. Defining as 8...
-		#define I2CDEVICE_BUFFER_SIZE 8
-	#elif I2CDEVICE_BUFFER_SIZE < 8
-		#warning I2CDevice requires I2CDEVICE_BUFFER_SIZE >= 8. Setting to 8...
-		#undef I2CDEVICE_BUFFER_SIZE
-		#define I2CDEVICE_BUFFER_SIZE 8
-	#endif
+#if !defined(I2CDEVICE_BUFFER_SIZE)
+	#error I2CDEVICE_BUFFER_SIZE not defined
+#elif I2CDEVICE_BUFFER_SIZE < 4
+	#error I2CDEVICE_BUFFER_SIZE must be >= 8
 #endif
 
 /**
@@ -32,66 +23,111 @@ class I2CDevice
 {
 public:
 
-	// Endian enum
-	typedef enum
-	{
-		msb_first,
-		lsb_first,
-	}
-	endian_t;
+	// I2C interface type
+	#if defined(PLATFORM_ARDUINO)
+		typedef TwoWire i2c_t;
+	#elif defined(PLATFORM_MBED)
+		typedef I2C i2c_t;
+	#endif
 
-	// Constructors and Basics
-	I2CDevice(I2CDEVICE_I2C_CLASS* i2c, uint8_t i2c_addr, endian_t endian);
-	I2CDevice();
-	I2CDEVICE_I2C_CLASS& get_i2c();
+	// Constructor and Basics
+	I2CDevice(i2c_t* i2c, uint8_t i2c_addr, Struct::endian_t endian);
+	i2c_t& get_i2c();
 
-	// Write Methods
-	void write_int8(uint8_t reg_addr, int8_t value);
-	void write_int16(uint8_t reg_addr, int16_t value);
-	void write_int32(uint8_t reg_addr, int32_t value);
-	void write_int64(uint8_t reg_addr, int64_t value);
-	void write_uint8(uint8_t reg_addr, uint8_t value);
-	void write_uint16(uint8_t reg_addr, uint16_t value);
-	void write_uint32(uint8_t reg_addr, uint32_t value);
-	void write_uint64(uint8_t reg_addr, uint64_t value);
-
-	// Single read methods
-	int8_t read_int8(uint8_t reg_addr);
-	int16_t read_int16(uint8_t reg_addr);
-	int32_t read_int32(uint8_t reg_addr);
-	int64_t read_int64(uint8_t reg_addr);
-	uint8_t read_uint8(uint8_t reg_addr);
-	uint16_t read_uint16(uint8_t reg_addr);
-	uint32_t read_uint32(uint8_t reg_addr);
-	uint64_t read_uint64(uint8_t reg_addr);
-
-	// Sequential read methods
-	void read_sequence(uint8_t reg_addr, uint8_t num_bytes);
-	int8_t read_int8();
-	int16_t read_int16();
-	int32_t read_int32();
-	int64_t read_int64();
-	uint8_t read_uint8();
-	uint16_t read_uint16();
-	uint32_t read_uint32();
-	uint64_t read_uint64();
+	// Getters and Setters
+	template <typename T> I2CDevice& set(uint8_t reg_addr, T val);
+	I2CDevice& get_seq(uint8_t reg_addr, uint8_t num_bytes);
+	template <typename T> I2CDevice& get(T& val);
+	template <typename T> I2CDevice& operator>>(T& val);
+	template <typename T> operator T();
+	template <typename T> I2CDevice& get(uint8_t reg_addr, T& val);
 
 protected:
-
-	// Device information
-	I2CDEVICE_I2C_CLASS* i2c;
+	i2c_t* i2c;
 	uint8_t i2c_addr;
-	endian_t endian;
-
-	// Data storage
-	union64_t union64;
-#if defined(PLATFORM_MBED)
-	uint8_t buffer_idx;
-	uint8_t buffer_len;
-	char buffer[I2CDEVICE_BUFFER_SIZE + 1];
-#endif
-
-	// Read-write methods
-	void write_bytes(uint8_t reg_addr, uint8_t num_bytes);
-	void read_bytes(uint8_t num_bytes);
+	uint8_t buffer[I2CDEVICE_BUFFER_SIZE + 1];
+	Struct str;
+private:
+	I2CDevice(const I2CDevice&);
+	I2CDevice& operator=(const I2CDevice&);
 };
+
+/**
+ * Template Method Definitions
+ */
+
+/**
+ * @brief Sets value of given register address
+ * @param reg_addr Register address
+ * @param val Value to write
+ * @return Reference to this
+ */
+template <typename T>
+I2CDevice& I2CDevice::set(uint8_t reg_addr, T val)
+{
+	// Pack binary data
+	str.reset() << reg_addr << val;
+	const uint8_t num_bytes = sizeof(val) + 1;
+
+	// Write data to I2C
+	#if defined(PLATFORM_ARDUINO)
+		i2c->beginTransmission(i2c_addr);
+		for (uint8_t i = 0; i < num_bytes; i++)
+		{
+			i2c->write(buffer[i]);
+		}
+		i2c->endTransmission(true);
+	#elif defined(PLATFORM_MBED)
+		i2c->write(i2c_addr, buffer, num_bytes);
+	#endif
+
+	// Return self-reference
+	return (*this);
+}
+
+/**
+ * @brief Gets data after call to get_seq()
+ * @param val Value to write into
+ * @return Reference to this
+ */
+template <typename T>
+I2CDevice& I2CDevice::get(T& val)
+{
+	str.get(val);
+	return (*this);
+}
+
+/**
+ * @brief Shorthand for get() method
+ * @param val Value to write into
+ * @return Reference to this
+ */
+template <typename T>
+I2CDevice& I2CDevice::operator>>(T& val)
+{
+	return get(val);
+}
+
+/**
+ * @brief Shorthand for get() method
+ */
+template <typename T>
+I2CDevice::operator T()
+{
+	T val;
+	get(val);
+	return val;
+}
+
+/**
+ * @brief Gets data from register
+ * @param reg_addr Register address
+ * @param val Value to write into
+ * @return Reference to this
+ */
+template <typename T>
+I2CDevice& I2CDevice::get(uint8_t reg_addr, T& val)
+{
+	get_seq(reg_addr, sizeof(val));
+	return get(val);
+}
