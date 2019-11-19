@@ -12,7 +12,7 @@
  */
 #if !defined(I2CDEVICE_BUFFER_SIZE)
 	#error I2CDEVICE_BUFFER_SIZE not defined
-#elif I2CDEVICE_BUFFER_SIZE < 4
+#elif I2CDEVICE_BUFFER_SIZE < 8
 	#error I2CDEVICE_BUFFER_SIZE must be >= 8
 #endif
 
@@ -78,7 +78,7 @@ I2CDevice& I2CDevice::set(uint8_t reg_addr, T val)
 		}
 		i2c->endTransmission(true);
 	#elif defined(PLATFORM_MBED)
-		i2c->write(i2c_addr, buffer, num_bytes);
+		i2c->write(i2c_addr, (const char*)buffer, num_bytes);
 	#endif
 
 	// Return self-reference

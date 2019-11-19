@@ -49,8 +49,8 @@ I2CDevice& I2CDevice::get_seq(uint8_t reg_addr, uint8_t num_bytes)
 		str.reset();
 	#elif defined(PLATFORM_MBED)
 		str.reset() << reg_addr;
-		i2c->write(i2c_addr, buffer, 1, true);
-		i2c->read(i2c_addr, buffer, num_bytes);
+		i2c->write(i2c_addr, (const char*)buffer, 1, true);
+		i2c->read(i2c_addr, (char*)buffer, num_bytes);
 	#endif
 	return (*this);
 }
